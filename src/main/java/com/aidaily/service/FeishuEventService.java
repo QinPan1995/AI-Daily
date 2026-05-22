@@ -57,9 +57,8 @@ public class FeishuEventService {
         log.info("Feishu event decrypted: {}", body);
         if (body.contains("url_verification")){
             Optional<FeishuEventParser.UrlVerification> urlVerification = eventParser.parseUrlVerification(body);
-            log.info("urlVerification：{}", urlVerification.get());
             if (urlVerification.isPresent()) {
-                return buildChallengeResponse(urlVerification.get().getChallenge());
+                return Collections.singletonMap("challenge", urlVerification.get().getChallenge());
             }
         }
         log.info("2");
