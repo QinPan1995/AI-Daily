@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: AIDaily
+    name: AiDaily
   datasource:
     url: jdbc:mysql://120.76.206.153:3306/ai_daily?useUnicode=true&characterEncoding=utf8
     username: admin

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 修改APP_NAME为云效上的应用名
-APP_NAME=AIDaily
+APP_NAME=AiDaily
 
 
 PROG_NAME=$0
