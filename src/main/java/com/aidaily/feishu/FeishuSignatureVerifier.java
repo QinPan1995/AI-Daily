@@ -33,9 +33,7 @@ public class FeishuSignatureVerifier {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(base.getBytes(StandardCharsets.UTF_8));
             String expected = bytesToHex(hash);
-            return MessageDigest.isEqual(
-                    expected.getBytes(StandardCharsets.UTF_8),
-                    signature.getBytes(StandardCharsets.UTF_8));
+            return expected.equalsIgnoreCase(signature);
         } catch (Exception e) {
             return false;
         }

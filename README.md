@@ -64,7 +64,8 @@ mvn spring-boot:run
 4. **请求 URL**：`https://<你的公网域名>/feishu/event`  
    本地开发可用 [ngrok](https://ngrok.com) / Cloudflare Tunnel 暴露 `8080`。
 5. **Verification Token**：与 `FEISHU_VERIFICATION_TOKEN` 一致。
-6. **Encrypt Key**：若开启加密则填写 `FEISHU_ENCRYPT_KEY`；未开启则留空。
+6. **Encrypt Key**：若开启加密则填写 `FEISHU_ENCRYPT_KEY`；未开启则留空。  
+   **重要**：开启加密后，URL 验证时不能返回明文 `challenge`，必须返回 `{"encrypt":"..."}`（代码已处理）。
 7. 将**机器人拉入需要采集的群**；私聊需用户主动给机器人发消息。
 
 ## 核心接口
