@@ -109,6 +109,13 @@ public class FeishuEventParser {
         public String getChallenge() {
             return challenge;
         }
+
+        @Override
+        public String toString() {
+            return "UrlVerification{" +
+                    "challenge='" + challenge + '\'' +
+                    '}';
+        }
     }
 
     public static class IncomingMessage {

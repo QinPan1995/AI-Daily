@@ -57,20 +57,22 @@ public class FeishuEventService {
         log.info("Feishu event decrypted: {}", body);
         if (body.contains("url_verification")){
             Optional<FeishuEventParser.UrlVerification> urlVerification = eventParser.parseUrlVerification(body);
+            log.info("urlVerification：{}", urlVerification.get());
             if (urlVerification.isPresent()) {
                 return buildChallengeResponse(urlVerification.get().getChallenge());
             }
         }
+        log.info("2");
         if (!feishuCrypto.encryptionEnabled()
                 && !signatureVerifier.verifyPlainToken(extractToken(body))) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid verification token");
         }
-
+        log.info("3");
         Optional<FeishuEventParser.IncomingMessage> message = eventParser.parseMessageEvent(body);
         if (message.isPresent()) {
             messageCollectorService.saveIfNew(message.get());
         }
-
+        log.info("4");
         ObjectNode ok = objectMapper.createObjectNode();
         ok.put("code", 0);
         @SuppressWarnings("unchecked")
