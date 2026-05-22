@@ -21,7 +21,7 @@ public class FeishuEventController {
      * 需在开放平台配置：接收消息 im.message.receive_v1
      */
     @PostMapping(value = "/event", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> receiveEvent(
+    public Map<String, String> receiveEvent(
             @RequestHeader(value = "X-Lark-Request-Timestamp", required = false) String timestamp,
             @RequestHeader(value = "X-Lark-Request-Nonce", required = false) String nonce,
             @RequestHeader(value = "X-Lark-Signature", required = false) String signature,

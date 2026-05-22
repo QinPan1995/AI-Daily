@@ -41,7 +41,7 @@ public class FeishuEventService {
         this.objectMapper = objectMapper;
     }
 
-    public Map<String, Object> handle(
+    public Map<String, String> handle(
             String timestamp,
             String nonce,
             String signature,
@@ -52,20 +52,15 @@ public class FeishuEventService {
 //            log.warn("Feishu signature verification failed");
 //            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Feishu signature");
 //        }
-
+        // 解密
         String body = feishuCrypto.decryptIfNeeded(rawBody);
         log.info("Feishu event decrypted: {}", body);
-        // URL 验证优先处理：未加密时必须校验 body 内 token；加密时回包也需加密 challenge
-        Optional<FeishuEventParser.UrlVerification> urlVerification = eventParser.parseUrlVerification(body);
-        if (urlVerification.isPresent()) {
-            if (!feishuCrypto.encryptionEnabled()
-                    && !signatureVerifier.verifyPlainToken(extractToken(body))) {
-                log.warn("Feishu URL verification token mismatch");
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid verification token");
+        if (body.contains("url_verification")){
+            Optional<FeishuEventParser.UrlVerification> urlVerification = eventParser.parseUrlVerification(body);
+            if (urlVerification.isPresent()) {
+                return buildChallengeResponse(urlVerification.get().getChallenge());
             }
-            return buildChallengeResponse(urlVerification.get().getChallenge());
         }
-
         if (!feishuCrypto.encryptionEnabled()
                 && !signatureVerifier.verifyPlainToken(extractToken(body))) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid verification token");
@@ -79,7 +74,7 @@ public class FeishuEventService {
         ObjectNode ok = objectMapper.createObjectNode();
         ok.put("code", 0);
         @SuppressWarnings("unchecked")
-        Map<String, Object> result = objectMapper.convertValue(ok, Map.class);
+        Map<String, String> result = objectMapper.convertValue(ok, Map.class);
         return result;
     }
 
@@ -87,16 +82,16 @@ public class FeishuEventService {
      * 未开加密：{"challenge":"xxx"}
      * 已开加密：{"encrypt":"加密后的 challenge"}（飞书文档要求，否则提示 Challenge 未返回）
      */
-    private Map<String, Object> buildChallengeResponse(String challenge) throws Exception {
+    private Map<String, String> buildChallengeResponse(String challenge) throws Exception {
         if (feishuCrypto.encryptionEnabled()) {
             String encrypted = feishuCrypto.encryptChallenge(challenge);
-            Map<String, Object> resp = new HashMap<String, Object>();
+            Map<String, String> resp = new HashMap<>();
             resp.put("encrypt", encrypted);
             log.info("Feishu URL verification OK (encrypted challenge returned)");
             return resp;
         }
         log.info("Feishu URL verification OK (plain challenge returned)");
-        return Collections.<String, Object>singletonMap("challenge", challenge);
+        return Collections.singletonMap("challenge", challenge);
     }
 
     private String extractToken(String body) throws Exception {
