@@ -46,7 +46,8 @@ public class FeishuEventService {
             String nonce,
             String signature,
             String rawBody) throws Exception {
-
+        // 记录所有参数
+        log.info("Feishu event received: timestamp={}, nonce={}, signature={}, rawBody={}", timestamp, nonce, signature, rawBody);
         if (!signatureVerifier.verifyEncrypted(timestamp, nonce, signature, rawBody)) {
             log.warn("Feishu signature verification failed");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Feishu signature");
