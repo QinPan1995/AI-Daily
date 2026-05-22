@@ -19,16 +19,13 @@ public class FeishuEventParser {
 
     public Optional<UrlVerification> parseUrlVerification(String body) throws Exception {
         JsonNode root = objectMapper.readTree(body);
-        if (root.has("challenge")) {
+        if (root.has("challenge") && root.has("type")) {
             String challenge = root.get("challenge").asText();
-            return Optional.of(new UrlVerification(challenge));
-        }
-        JsonNode header = root.path("header");
-        if ("url_verification".equals(textOrNull(header.path("event_type")))) {
-            String challenge = textOrNull(root.path("challenge"));
-            if (challenge != null) {
+            String type = root.get("type").asText();
+            if ("url_verification".equals(type)) {
                 return Optional.of(new UrlVerification(challenge));
             }
+            return Optional.empty();
         }
         return Optional.empty();
     }

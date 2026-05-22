@@ -5,7 +5,6 @@ import com.aidaily.feishu.FeishuEventParser;
 import com.aidaily.feishu.FeishuSignatureVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -48,35 +47,25 @@ public class FeishuEventService {
             String rawBody) throws Exception {
         // 记录所有参数
         log.info("Feishu event received: timestamp={}, nonce={}, signature={}, rawBody={}", timestamp, nonce, signature, rawBody);
-//        if (!signatureVerifier.verifyEncrypted(timestamp, nonce, signature, rawBody)) {
-//            log.warn("Feishu signature verification failed");
-//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Feishu signature");
-//        }
         // 解密
         String body = feishuCrypto.decryptIfNeeded(rawBody);
         log.info("Feishu event decrypted: {}", body);
-        if (body.contains("url_verification")){
-            Optional<FeishuEventParser.UrlVerification> urlVerification = eventParser.parseUrlVerification(body);
-            if (urlVerification.isPresent()) {
-                return Collections.singletonMap("challenge", urlVerification.get().getChallenge());
-            }
+        Optional<FeishuEventParser.UrlVerification> urlVerification = eventParser.parseUrlVerification(body);
+        // 订阅地址验证
+        if (urlVerification.isPresent()) {
+            // 通过
+            return Collections.singletonMap("challenge", urlVerification.get().getChallenge());
         }
-        log.info("2");
-        if (!feishuCrypto.encryptionEnabled()
-                && !signatureVerifier.verifyPlainToken(extractToken(body))) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid verification token");
+
+        // 签名校验
+        if (!signatureVerifier.verifyEncrypted(timestamp, nonce, signature, rawBody)) {
+            log.info("Feishu signature verification failed");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Feishu signature");
         }
-        log.info("3");
+
         Optional<FeishuEventParser.IncomingMessage> message = eventParser.parseMessageEvent(body);
-        if (message.isPresent()) {
-            messageCollectorService.saveIfNew(message.get());
-        }
-        log.info("4");
-        ObjectNode ok = objectMapper.createObjectNode();
-        ok.put("code", 0);
-        @SuppressWarnings("unchecked")
-        Map<String, String> result = objectMapper.convertValue(ok, Map.class);
-        return result;
+        message.ifPresent(messageCollectorService::saveIfNew);
+        return Collections.singletonMap("code", "200");
     }
 
     /**
