@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.Objects;
 
 @Component
 public class FeishuSignatureVerifier {
@@ -14,10 +13,6 @@ public class FeishuSignatureVerifier {
 
     public FeishuSignatureVerifier(FeishuProperties properties) {
         this.properties = properties;
-    }
-
-    public boolean isEncryptionEnabled() {
-        return properties.encryptionEnabled();
     }
 
     /** 开启 Encrypt Key 时校验签名（对原始请求体）。 */
@@ -34,20 +29,6 @@ public class FeishuSignatureVerifier {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public static void main(String[] args) {
-        String timestamp=null;
-        String nonce=null;
-        String signature=null;
-        String rawBody=null;
-        String content = timestamp + nonce +  rawBody;
-        System.out.println(content);
-    }
-
-    /** 未加密时校验 header.token。 */
-    public boolean verifyPlainToken(String token) {
-        return Objects.equals(properties.getVerificationToken(), token);
     }
 
     private static String bytesToHex(byte[] bytes) {
