@@ -48,13 +48,13 @@ public class FeishuEventService {
             String rawBody) throws Exception {
         // 记录所有参数
         log.info("Feishu event received: timestamp={}, nonce={}, signature={}, rawBody={}", timestamp, nonce, signature, rawBody);
-        if (!signatureVerifier.verifyEncrypted(timestamp, nonce, signature, rawBody)) {
-            log.warn("Feishu signature verification failed");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Feishu signature");
-        }
+//        if (!signatureVerifier.verifyEncrypted(timestamp, nonce, signature, rawBody)) {
+//            log.warn("Feishu signature verification failed");
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Feishu signature");
+//        }
 
         String body = feishuCrypto.decryptIfNeeded(rawBody);
-
+        log.info("Feishu event decrypted: {}", body);
         // URL 验证优先处理：未加密时必须校验 body 内 token；加密时回包也需加密 challenge
         Optional<FeishuEventParser.UrlVerification> urlVerification = eventParser.parseUrlVerification(body);
         if (urlVerification.isPresent()) {

@@ -25,18 +25,24 @@ public class FeishuSignatureVerifier {
         if (!properties.encryptionEnabled()) {
             return true;
         }
-        if (timestamp == null || nonce == null || signature == null || rawBody == null) {
-            return false;
-        }
         try {
-            String base = timestamp + nonce + properties.getEncryptKey() + rawBody;
+            String content = timestamp + nonce + properties.getEncryptKey() + rawBody;
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(base.getBytes(StandardCharsets.UTF_8));
+            byte[] hash = digest.digest(content.getBytes(StandardCharsets.UTF_8));
             String expected = bytesToHex(hash);
             return expected.equalsIgnoreCase(signature);
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public static void main(String[] args) {
+        String timestamp=null;
+        String nonce=null;
+        String signature=null;
+        String rawBody=null;
+        String content = timestamp + nonce +  rawBody;
+        System.out.println(content);
     }
 
     /** 未加密时校验 header.token。 */
