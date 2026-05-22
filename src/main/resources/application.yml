@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ai-daily
+  datasource:
+    url: jdbc:mysql://120.76.206.153:3306/ai_daily?useUnicode=true&characterEncoding=utf8
+    username: admin
+    password: ymumwKotcoq(
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+feishu:
+  app-id: cli_a0deb7329178500d
+  app-secret: X4FOvLzytEyJF9q4n3gOIbFntEm31k0e
+  verification-token: 6Kx7XH3d2yHb22ZlYagZIg0zTcGBNH3a
+  encrypt-key: vdfq3axRjMZDqGTIPXr8Ab6s6qGkghoP
+
+logging:
+  level:
+    com.aidaily: INFO
