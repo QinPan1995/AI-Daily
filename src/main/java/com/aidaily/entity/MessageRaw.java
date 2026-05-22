@@ -51,6 +51,12 @@ public class MessageRaw {
     @Column(name = "raw_payload", columnDefinition = "JSON")
     private String rawPayload;
 
+    @Column(name = "ai_processed", nullable = false)
+    private boolean aiProcessed;
+
+    @Column(name = "ai_error", length = 500)
+    private String aiError;
+
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private Instant createdAt;
 
@@ -140,6 +146,22 @@ public class MessageRaw {
 
     public void setRawPayload(String rawPayload) {
         this.rawPayload = rawPayload;
+    }
+
+    public boolean isAiProcessed() {
+        return aiProcessed;
+    }
+
+    public void setAiProcessed(boolean aiProcessed) {
+        this.aiProcessed = aiProcessed;
+    }
+
+    public String getAiError() {
+        return aiError;
+    }
+
+    public void setAiError(String aiError) {
+        this.aiError = aiError;
     }
 
     public Instant getCreatedAt() {

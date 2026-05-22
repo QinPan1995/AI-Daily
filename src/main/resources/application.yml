@@ -5,10 +5,19 @@ spring:
   application:
     name: AiDaily
   datasource:
-    url: jdbc:mysql://120.76.206.153:3306/ai_daily?useUnicode=true&characterEncoding=utf8
+    url: jdbc:mysql://120.76.206.153:3306/ai_daily?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: admin
     password: ymumwKotcoq(
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+ai:
+  enabled: true
+  provider: deepseek
+  deepseek:
+    api-key: sk-dec846b48cb344bd9779b32686372a37
+    base-url: https://api.deepseek.com
+    model: deepseek-chat
+    timeout-ms: 60000
 
 feishu:
   app-id: cli_a0deb7329178500d

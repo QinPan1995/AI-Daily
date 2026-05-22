@@ -14,16 +14,20 @@ public class MessageCollectorService {
     private static final Logger log = LoggerFactory.getLogger(MessageCollectorService.class);
 
     private final MessageRawRepository repository;
+    private final MessageAnalysisService messageAnalysisService;
 
-    public MessageCollectorService(MessageRawRepository repository) {
+    public MessageCollectorService(
+            MessageRawRepository repository,
+            MessageAnalysisService messageAnalysisService) {
         this.repository = repository;
+        this.messageAnalysisService = messageAnalysisService;
     }
 
     @Transactional
-    public void saveIfNew(FeishuEventParser.IncomingMessage incoming) {
+    public MessageRaw saveIfNew(FeishuEventParser.IncomingMessage incoming) {
         if (repository.existsByMessageId(incoming.getMessageId())) {
             log.debug("Duplicate message skipped: {}", incoming.getMessageId());
-            return;
+            return null;
         }
 
         MessageRaw entity = new MessageRaw();
@@ -35,9 +39,13 @@ public class MessageCollectorService {
         entity.setContent(incoming.getContent());
         entity.setSendTime(incoming.getSendTime());
         entity.setRawPayload(incoming.getRawPayload());
+        entity.setAiProcessed(false);
 
-        repository.save(entity);
+        MessageRaw saved = repository.save(entity);
         log.info("Saved message {} chatType={} chatId={}",
                 incoming.getMessageId(), incoming.getChatType(), incoming.getChatId());
+
+        messageAnalysisService.analyzeAsync(saved.getId());
+        return saved;
     }
 }

@@ -101,8 +101,50 @@ ORDER BY send_time DESC
 LIMIT 20;
 ```
 
+## 阶段二：AI 分析 → work_event（已实现）
+
+消息入库后 **异步** 调用 DeepSeek，提取工作事件写入 `work_event`。
+
+### 配置 DeepSeek
+
+在 `application.yml` 或 IDEA 环境变量中设置：
+
+```yaml
+ai:
+  deepseek:
+    api-key: sk-你的密钥
+```
+
+或环境变量 `DEEPSEEK_API_KEY`。
+
+### 数据库迁移
+
+启动时 Flyway 自动执行 `V2__work_event.sql`。若库已存在且未用过 Flyway，可手动执行该 SQL。
+
+### 工作事件表
+
+| 字段 | 说明 |
+|------|------|
+| `message_raw_id` | 来源消息 |
+| `project_name` | 项目名 |
+| `event_type` | TASK_DONE / BLOCKER / … |
+| `summary` | 事件摘要 |
+| `status` | DONE / IN_PROGRESS / BLOCKED / OPEN |
+| `event_time` | 事件时间（默认取消息发送时间） |
+
+### 调试接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/admin/analyze/{messageRawId}` | 手动对某条消息重新分析 |
+| GET | `/admin/work-events` | 查看全部工作事件 |
+| GET | `/admin/work-events/by-message/{id}` | 按消息查看事件 |
+
+### 扩展其他大模型
+
+实现 `LlmClient` 接口并注册 Bean，修改 `ai.provider` 即可（当前默认 `deepseek`）。
+
 ## 下一阶段（未实现）
 
-- AI 分析 → `work_event`
 - 定时任务 → `daily_report`
 - 飞书机器人推送日报
