@@ -13,4 +13,9 @@ public interface LlmClient {
      * @return 模型原始文本响应
      */
     String chat(String systemPrompt, String userPrompt);
+
+    /**
+     * 生成自然语言内容（如日报），不要求 JSON 格式。
+     */
+    String chatText(String systemPrompt, String userPrompt);
 }

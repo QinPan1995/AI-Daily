@@ -117,11 +117,9 @@ ai:
 
 或环境变量 `DEEPSEEK_API_KEY`。
 
-### 数据库迁移
-
-启动时 Flyway 自动执行 `V2__work_event.sql`。若库已存在且未用过 Flyway，可手动执行该 SQL。
-
 ### 工作事件表
+
+（表结构请自行在 MySQL 手动维护。）
 
 | 字段 | 说明 |
 |------|------|
@@ -144,7 +142,32 @@ ai:
 
 实现 `LlmClient` 接口并注册 Bean，修改 `ai.provider` 即可（当前默认 `deepseek`）。
 
+## 阶段三：AI 生成日报 daily_report（已实现）
+
+### 手动建表
+
+执行 [docs/sql/daily_report.sql](src/main/resources/db/migration/daily_report.sql)（不使用 Flyway）。
+
+### 接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/daily-reports/generate?date=2026-05-21` | 查当日 `message_raw`（按时间排序）→ **一次 AI 调用**生成日报 → 入库 |
+| GET | `/api/daily-reports?date=2026-05-21` | 查询已生成的日报 |
+
+同一天重复 POST 会**覆盖**该日 `content`。
+
+### 数据来源
+
+按 `report_date`（Asia/Shanghai）筛选 `message_raw.send_time`，升序拼入 prompt。  
+生成前会过滤明显噪声（收到、好的、哈哈等），**不依赖** `work_event`，避免每条消息单独调 API。
+
+### 示例
+
+```bash
+curl -X POST "http://localhost:8080/api/daily-reports/generate?date=2026-05-21"
+```
+
 ## 下一阶段（未实现）
 
-- 定时任务 → `daily_report`
 - 飞书机器人推送日报

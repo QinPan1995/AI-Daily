@@ -30,20 +30,31 @@ public class DeepSeekLlmClient implements LlmClient {
 
     @Override
     public String chat(String systemPrompt, String userPrompt) {
+        return complete(systemPrompt, userPrompt, true);
+    }
+
+    @Override
+    public String chatText(String systemPrompt, String userPrompt) {
+        return complete(systemPrompt, userPrompt, false);
+    }
+
+    private String complete(String systemPrompt, String userPrompt, boolean jsonMode) {
         if (!config.isConfigured()) {
             throw new IllegalStateException("DeepSeek API key is not configured");
         }
 
         ChatCompletionRequest request = new ChatCompletionRequest();
         request.setModel(config.getModel());
-        request.setTemperature(0.1);
+        request.setTemperature(jsonMode ? 0.1 : 0.3);
         request.setMessages(Arrays.asList(
                 new ChatCompletionRequest.ChatMessage("system", systemPrompt),
                 new ChatCompletionRequest.ChatMessage("user", userPrompt)
         ));
-        ChatCompletionRequest.ResponseFormat format = new ChatCompletionRequest.ResponseFormat();
-        format.setType("json_object");
-        request.setResponseFormat(format);
+        if (jsonMode) {
+            ChatCompletionRequest.ResponseFormat format = new ChatCompletionRequest.ResponseFormat();
+            format.setType("json_object");
+            request.setResponseFormat(format);
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
