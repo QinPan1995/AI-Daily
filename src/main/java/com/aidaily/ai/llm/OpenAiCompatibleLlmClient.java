@@ -1,6 +1,5 @@
 package com.aidaily.ai.llm;
 
-import com.aidaily.config.AiProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -11,21 +10,38 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 
-public class DeepSeekLlmClient implements LlmClient {
+/**
+ * 调用 OpenAI 兼容的 Chat Completions API（DeepSeek、Ollama 等）。
+ */
+public class OpenAiCompatibleLlmClient implements LlmClient {
 
-    private static final Logger log = LoggerFactory.getLogger(DeepSeekLlmClient.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleLlmClient.class);
 
-    private final AiProperties.DeepSeek config;
+    private final String providerName;
+    private final String baseUrl;
+    private final String model;
+    private final String apiKey;
+    private final boolean jsonResponseFormat;
     private final RestTemplate restTemplate;
 
-    public DeepSeekLlmClient(AiProperties.DeepSeek config, RestTemplate restTemplate) {
-        this.config = config;
+    public OpenAiCompatibleLlmClient(
+            String providerName,
+            String baseUrl,
+            String model,
+            String apiKey,
+            boolean jsonResponseFormat,
+            RestTemplate restTemplate) {
+        this.providerName = providerName;
+        this.baseUrl = baseUrl;
+        this.model = model;
+        this.apiKey = apiKey;
+        this.jsonResponseFormat = jsonResponseFormat;
         this.restTemplate = restTemplate;
     }
 
     @Override
     public String getProviderName() {
-        return "deepseek";
+        return providerName;
     }
 
     @Override
@@ -39,18 +55,14 @@ public class DeepSeekLlmClient implements LlmClient {
     }
 
     private String complete(String systemPrompt, String userPrompt, boolean jsonMode) {
-        if (!config.isConfigured()) {
-            throw new IllegalStateException("DeepSeek API key is not configured");
-        }
-
         ChatCompletionRequest request = new ChatCompletionRequest();
-        request.setModel(config.getModel());
+        request.setModel(model);
         request.setTemperature(jsonMode ? 0.1 : 0.3);
         request.setMessages(Arrays.asList(
                 new ChatCompletionRequest.ChatMessage("system", systemPrompt),
                 new ChatCompletionRequest.ChatMessage("user", userPrompt)
         ));
-        if (jsonMode) {
+        if (jsonMode && jsonResponseFormat) {
             ChatCompletionRequest.ResponseFormat format = new ChatCompletionRequest.ResponseFormat();
             format.setType("json_object");
             request.setResponseFormat(format);
@@ -58,29 +70,31 @@ public class DeepSeekLlmClient implements LlmClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(config.getApiKey());
+        if (apiKey != null && !apiKey.trim().isEmpty()) {
+            headers.setBearerAuth(apiKey.trim());
+        }
 
-        String url = trimTrailingSlash(config.getBaseUrl()) + "/v1/chat/completions";
+        String url = trimTrailingSlash(baseUrl) + "/v1/chat/completions";
         HttpEntity<ChatCompletionRequest> entity = new HttpEntity<ChatCompletionRequest>(request, headers);
 
-        log.debug("Calling DeepSeek API: {}", url);
+        log.debug("Calling {} API: {}", providerName, url);
         ResponseEntity<ChatCompletionResponse> response = restTemplate.postForEntity(
                 url, entity, ChatCompletionResponse.class);
 
         ChatCompletionResponse body = response.getBody();
         if (body == null || body.getChoices() == null || body.getChoices().isEmpty()) {
-            throw new IllegalStateException("DeepSeek API returned empty response");
+            throw new IllegalStateException(providerName + " API returned empty response");
         }
         ChatCompletionRequest.ChatMessage message = body.getChoices().get(0).getMessage();
         if (message == null || message.getContent() == null) {
-            throw new IllegalStateException("DeepSeek API returned empty message content");
+            throw new IllegalStateException(providerName + " API returned empty message content");
         }
         return message.getContent();
     }
 
     private static String trimTrailingSlash(String baseUrl) {
-        if (baseUrl == null) {
-            return "https://api.deepseek.com";
+        if (baseUrl == null || baseUrl.trim().isEmpty()) {
+            throw new IllegalStateException("LLM base-url is not configured");
         }
         return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }

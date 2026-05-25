@@ -72,8 +72,8 @@ public class MessageAnalysisService {
             return;
         }
 
-        if (!aiProperties.isEnabled() || !aiProperties.getDeepseek().isConfigured()) {
-            log.warn("AI analysis skipped: disabled or DeepSeek API key not configured");
+        if (!aiProperties.isLlmConfigured()) {
+            log.warn("AI analysis skipped: disabled or LLM provider not configured");
             markProcessed(message, null);
             return;
         }

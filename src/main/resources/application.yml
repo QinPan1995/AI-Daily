@@ -12,12 +12,18 @@ spring:
 
 ai:
   enabled: true
-  provider: deepseek
+  # 可选: deepseek | ollama
+  provider: ollama
   deepseek:
     api-key: sk-dec846b48cb344bd9779b32686372a37
     base-url: https://api.deepseek.com
     model: deepseek-chat
     timeout-ms: 60000
+  ollama:
+    base-url: http://localhost:11434
+    model: qwen2.5:7b
+    timeout-ms: 120000
+    # api-key:
 
 feishu:
   app-id: cli_a0deb7329178500d

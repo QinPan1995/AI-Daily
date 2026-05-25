@@ -105,17 +105,38 @@ LIMIT 20;
 
 消息入库后 **异步** 调用 DeepSeek，提取工作事件写入 `work_event`。
 
-### 配置 DeepSeek
+### 配置大模型（`ai.provider`）
 
-在 `application.yml` 或 IDEA 环境变量中设置：
+**DeepSeek（云端）**
 
 ```yaml
 ai:
+  provider: deepseek
   deepseek:
     api-key: sk-你的密钥
+    base-url: https://api.deepseek.com
+    model: deepseek-chat
 ```
 
-或环境变量 `DEEPSEEK_API_KEY`。
+**Ollama（本地，如 qwen2.5:7b）**
+
+先确保本机已拉取并运行模型：
+
+```bash
+ollama pull qwen2.5:7b
+ollama serve   # 默认 http://localhost:11434
+```
+
+```yaml
+ai:
+  provider: ollama
+  ollama:
+    base-url: http://localhost:11434
+    model: qwen2.5:7b
+    timeout-ms: 120000
+```
+
+Ollama 使用 OpenAI 兼容接口 `/v1/chat/completions`，无需 API Key（走代理时可配 `api-key`）。
 
 ### 工作事件表
 
@@ -140,7 +161,7 @@ ai:
 
 ### 扩展其他大模型
 
-实现 `LlmClient` 接口并注册 Bean，修改 `ai.provider` 即可（当前默认 `deepseek`）。
+实现 `LlmClient` 接口，或复用 `OpenAiCompatibleLlmClient`（OpenAI 兼容 API），在 `LlmConfig` 注册 Bean 并设置 `ai.provider`。
 
 ## 阶段三：AI 生成日报 daily_report（已实现）
 

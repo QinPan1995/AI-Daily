@@ -63,7 +63,7 @@ public class DailyReportService {
         if (reportDate == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reportDate 不能为空");
         }
-        if (!aiProperties.isEnabled() || !aiProperties.getDeepseek().isConfigured()) {
+        if (!aiProperties.isLlmConfigured()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI 未配置或已禁用");
         }
 
